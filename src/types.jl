@@ -1,5 +1,8 @@
 # types.jl --- types for spectra keeping and manip
 
+export AbstractSpectrum, EvenSpacedSpectrum, SpectrumView
+export endpoints, intensities
+
 """
     abstract type AbstractSpectrum
 
@@ -60,7 +63,7 @@ indices where the slices will be obtained.
 struct SpectrumView{sT<:AbstractSpectrum}
     parent::sT
     viewrange::Tuple{Int,Int}
-    function EvenSpacedView(parent, viewrange)
+    function SpectrumView(parent, viewrange)
         st, sto = viewrange
         @assert st ∈ eachindex(intensities(parent)) && sto ∈ eachindex(intensities(parent))
         return new{typeof(parent)}(parent, viewrange)

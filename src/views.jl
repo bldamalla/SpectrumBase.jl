@@ -1,5 +1,7 @@
 # views.jl --- handling views of spectra
 
+export getview
+
 """
     getview(spec, inner, method=:binsearch)
 
