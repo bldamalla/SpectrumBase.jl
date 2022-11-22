@@ -1,5 +1,10 @@
 # maths.jl --- mathematical operations on spectra
 
+export LeftRiemann, RightRiemann, Midpoint
+export nominalmin, nominalmax
+export integrate, moment
+export firstderivative
+
 ################
 #
 #   INTEGRATION
@@ -57,7 +62,7 @@ end
 
 ################
 #
-#   SPECTRAL MOMENTS / NOMINAL MAXIMA
+#   SPECTRAL MOMENTS / NOMINAL EXTREMA
 #
 ################
 """
@@ -72,6 +77,20 @@ function nominalmax(spectrum)
     maxint, idx = findmax(yvals)
     zippedidx = idx - firstindex(yvals) + firstindex(xvals)
     return xvals[zippedidx], maxint
+end
+
+"""
+    nominalmin(spectrum::Union{SpectrumView,AbstractSpectrum})
+
+Return the nominal (global) minimum intensity of the spectrum and its corresponding coordinate.
+"""
+function nominalmin(spectrum)
+    xvals = range(spectrum)
+    yvals = intensities(spectrum)
+
+    minint, idx = findmin(yvals)
+    zippedidx = idx - firstindex(yvals) + firstindex(xvals)
+    return xvals[zippedidx], minint
 end
 
 """
