@@ -105,6 +105,7 @@ moment(scheme, spectrum, degree=1) = _unscaledmoment(scheme, spectrum, degree) /
     sm_ex = _sumexpression(scheme)          # calculate sum expression according to scheme
 
     return quote
+        _integspeccheck(spectrum)           # check if spectrum is even spaced
         pre_yvals = intensities(spectrum)   # "pre" because we still need to multiply xvals^degree
         yvals = @. pre_yvals * range(spectrum) ^ degree
         Δ = step(spectrum)
