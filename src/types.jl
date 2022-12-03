@@ -74,7 +74,8 @@ vrange(esv) = esv.viewrange[1]:esv.viewrange[2]
 Base.range(esv::SpectrumView) = @inbounds range(esv.parent)[vrange(esv)]
 Base.step(esv::SpectrumView{T}) where {T<:ESS} = step(esv.parent)
 Base.length(esv::SpectrumView) = esv.viewrange[2] - esv.viewrange[1] + 1
-intensities(esv::SpectrumView) = intensities(esv.parent)[vrange(esv)]
+# intensities(esv::SpectrumView) = intensities(esv.parent)[vrange(esv)]
+intensities(esv::SpectrumView) = view(intensities(esv.parent), vrange(esv))
 
 isevenspaced(::Type{<:EvenSpacedSpectrum}) = true
 isevenspaced(::Type{<:AbstractSpectrum}) = false

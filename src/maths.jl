@@ -53,10 +53,10 @@ Numerically integrate `spectrum` using the integration scheme `R`.
         _integspeccheck(spectrum)
         yvals = intensities(spectrum)
         Δ = step(spectrum)
-        len = length(spectrum) - 1  # one point is lost in all above schemes
+        # len = length(spectrum) - 1  # one point is lost in all above schemes
 
         sm = $(sm_ex)
-        return sm * Δ * len
+        return sm * Δ
     end
 end
 
@@ -109,10 +109,10 @@ moment(scheme, spectrum, degree=1) = _unscaledmoment(scheme, spectrum, degree) /
         pre_yvals = intensities(spectrum)   # "pre" because we still need to multiply xvals^degree
         yvals = @. pre_yvals * range(spectrum) ^ degree
         Δ = step(spectrum)
-        len = length(spectrum) - 1  # one point is lost in all above schemes
+        # len = length(spectrum) - 1  # one point is lost in all above schemes
 
         sm = $(sm_ex)
-        return sm * Δ * len
+        return sm * Δ
     end
 end
 
