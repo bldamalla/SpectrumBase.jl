@@ -1,6 +1,6 @@
 # views.jl --- handling views of spectra
 
-export getview
+export getview, section
 
 """
     getview(spec, inner, method=:binsearch)
@@ -22,11 +22,23 @@ function getview(spec::AbstractSpectrum{xT}, inner, method=:binsearch) where xT
         (la < ix < ra) | (la > ix > ra)
     end "Endpoints in second argument should be within the `range` of the first argument."
 
-    @assert (la - ra) * (lb - rb) > 0 "Ordering of the endpoints should be maintained."
+    @assert (la - ra) * (lb - rb) > zero(xT) "Ordering of the endpoints should be maintained."
 
     # get the sections
     targrange = envelope(rng, inner, method)
     return SpectrumView(spec, targrange)
+end
+
+"""
+    section(specview::SpectrumView)
+
+Return the `range` and `intensities` of the `SpectrumView` from `getview(spec)`. This may be useful when
+generating separate copies of portions of the spectra for further manipulation.
+
+See also: [`getview`](@ref)
+"""
+function section(specview::SpectrumView)
+    range(specview), copy(intensities(specview))
 end
 
 function envelope(parent, inner, method)
@@ -66,13 +78,13 @@ function _envelope_binsearch(parent, inner)
     # get left end
     envstart = _binsearch_left(parent, istart)
     # get right end
-    envstop = _binsearch_left(parent, istop) + 1
+    envstop = _binsearch_left(parent, istop)
 
     return (envstart, envstop)
 end
 
 function _binsearch_left(parent, ref, lo=firstindex(parent), hi=lastindex(parent))
-    cpleft = last(parent)-first(parent) > 0 ? (<) : (>)
+    cpleft = last(parent)-first(parent) > 0 ? (<=) : (>=)
 
     (lo == hi) && return lo
     mid = div(lo + hi, 2)
