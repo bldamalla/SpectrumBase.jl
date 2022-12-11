@@ -131,11 +131,11 @@ function firstderivative(spectrum)
     _integspeccheck(spectrum)   # check if the spectrum is even spaced
     yvals = intensities(spectrum)
     Δ = step(spectrum)
-    len = length(spectrum) - 1  # length of vector containing actual derivatives
+    len = length(spectrum) - 2  # length of vector containing actual derivatives
 
     # initialize the output vector; first, last elements =0 to indicate loss of info
     ysimilar = similar(yvals)
-    ysimilar[firstindex(ysimilar)] = ysimilar[lastindex(ysimilar)] = zero(eltype(ysimilar))
+    ysimilar[begin] = ysimilar[end] = zero(eltype(ysimilar))
 
     # get the derivatives y'[j] = (y[j+1] - y[j-1])/2Δ
     for j in Iterators.take(Iterators.drop(eachindex(ysimilar), 1), len)
