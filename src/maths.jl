@@ -99,15 +99,16 @@ end
 Calculate the `degree`th spectral moment of `spectrum`, where integrations are performed using
 the integration scheme `scheme`. See `integrate` for a list of valid schemes.
 """
-moment(scheme, spectrum, degree=1) = _unscaledmoment(scheme, spectrum, degree) / integrate(scheme, spectrum)
+moment(scheme, spectrum, degree=1, center=zero(eltype(range(spectrum)))) = _unscaledmoment(scheme, spectrum, degree, center) / integrate(scheme, spectrum)
 
-@generated function _unscaledmoment(scheme, spectrum, degree)
+@generated function _unscaledmoment(scheme, spectrum, degree, center)
     sm_ex = _sumexpression(scheme)          # calculate sum expression according to scheme
 
     return quote
         _integspeccheck(spectrum)           # check if spectrum is even spaced
         pre_yvals = intensities(spectrum)   # "pre" because we still need to multiply xvals^degree
-        yvals = @. pre_yvals * range(spectrum) ^ degree
+        rg = range(spectrum)
+        yvals = @. pre_yvals * (rg - center) ^ degree
         Δ = step(spectrum)
         # len = length(spectrum) - 1  # one point is lost in all above schemes
 

@@ -19,7 +19,7 @@ function getview(spec::AbstractSpectrum{xT}, inner, method=:binsearch) where xT
     lb, rb = convert.(xT, inner)
 
     @assert all(inner) do ix
-        (la < ix < ra) | (la > ix > ra)
+        (la <= ix <= ra) | (la >= ix >= ra)
     end "Endpoints in second argument should be within the `range` of the first argument."
 
     @assert (la - ra) * (lb - rb) > zero(xT) "Ordering of the endpoints should be maintained."
@@ -74,34 +74,13 @@ end
 
 function _envelope_binsearch(parent, inner)
     istart, istop = inner
+    isrev = istart > istop
 
     # get left end
-    envstart = _binsearch_left(parent, istart)
+    envstart = searchsortedfirst(parent, istart, rev=isrev) - 1
     # get right end
-    envstop = _binsearch_left(parent, istop)
+    envstop = searchsortedlast(parent, istop, rev=isrev) + 1
 
     return (envstart, envstop)
-end
-
-function _binsearch_left(parent, ref, lo=firstindex(parent), hi=lastindex(parent))
-    cpleft = last(parent)-first(parent) > 0 ? (<=) : (>=)
-
-    (lo == hi) && return lo
-    mid = div(lo + hi, 2)
-
-    @inbounds if cpleft(ref, parent[mid])
-        # handle terminal cases
-        if lo == mid - 1
-            (cpleft(parent[lo], ref)) && cpleft(ref, parent[mid]) && return lo
-            return mid
-        end
-        return _binsearch_left(parent, ref, lo, mid)
-    else
-        if hi == mid + 1
-            (cpleft(parent[mid], ref) && cpleft(ref, parent[hi])) && return mid
-            return hi
-        end
-        return _binsearch_left(parent, ref, mid, hi)
-    end
 end
 
