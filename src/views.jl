@@ -77,9 +77,9 @@ function _envelope_binsearch(parent, inner)
     isrev = istart > istop
 
     # get left end
-    envstart = searchsortedfirst(parent, istart, rev=isrev) - 1
+    envstart = searchsortedlast(parent, istart, rev=isrev)
     # get right end
-    envstop = searchsortedlast(parent, istop, rev=isrev) + 1
+    envstop = searchsortedfirst(parent, istop, rev=isrev)
 
     return (envstart, envstop)
 end
