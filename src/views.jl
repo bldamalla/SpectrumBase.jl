@@ -13,7 +13,7 @@ Implemented methods for searching smallest intervals are:
 + `:binsearch` (default) - naive binary search
 + `:linear` - naive linear search
 """
-function getview(spec::AbstractSpectrum{xT}, inner, method=:binsearch) where xT
+function getview(spec::AbstractSpectrum{1,xT}, inner, method=:binsearch) where xT
     rng = range(spec)
     la, ra = first(rng), last(rng)
     lb, rb = convert.(xT, inner)

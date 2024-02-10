@@ -16,7 +16,7 @@ Derived types should implement the following methods:
 + `Base.range` - values for which the spectrum is obtained
 + `intensities` - values for each ``x`` value
 """
-abstract type AbstractSpectrum{xT<:Number,yT<:Number} end
+abstract type AbstractSpectrum{N,xT<:Number,yT<:Number} end
 
 """
     abstract type EvenSpacedSpectrum <: AbstractSpectrum
@@ -31,8 +31,11 @@ Derived types should, in addition to those for `SpectrumBase.intensities`, imple
 
 *Note*: `Base.range` is calculated using `endpoints` for this spectrum type.
 """
-abstract type EvenSpacedSpectrum{xT,yT} <: AbstractSpectrum{xT,yT} end
+abstract type EvenSpacedSpectrum{xT,yT} <: AbstractSpectrum{1,xT,yT} end
 const ESS = EvenSpacedSpectrum
+
+abstract type GridSpectrum{xT,yT} <: AbstractSpectrum{2,xT,yT} end
+const GS = GridSpectrum
 
 # from here below, definitions are mostly based on properties of evenly spaced spectra
 
@@ -46,7 +49,15 @@ Return the range for which the spectrum is obtained.
 """
 Base.range(ev::ESS) = range(endpoints(ev)...; length=length(ev))
 Base.step(ev::ESS) = step(range(ev))
-Base.length(ev::AbstractSpectrum) = length(intensities(ev))
+Base.size(ev::AbstractSpectrum{N}) where N = size(intensities(ev))
+Base.length(ev::AbstractSpectrum{1}) = length(intensities(ev))
+
+function Base.range(gr::GS)
+    eA, eB = endpoints(gr)
+    sA, sB = size(gr)
+    return (range(eA...; length=sA), range(eB...; length=sB))
+end
+Base.step(gr::GS) = map(step, range(gr))
 
 #################
 #
@@ -57,10 +68,10 @@ Base.length(ev::AbstractSpectrum) = length(intensities(ev))
 """
     SpectrumView
 
-A lazy view of an `AbstractSpectrum`. Stores the `parent` integer values indicating
+A lazy view of an `AbstractSpectrum{1}`. Stores the `parent` integer values indicating
 indices where the slices will be obtained.
 """
-struct SpectrumView{sT<:AbstractSpectrum}
+struct SpectrumView{sT<:AbstractSpectrum{1}}
     parent::sT
     viewrange::Tuple{Int,Int}
     function SpectrumView(parent, viewrange)
@@ -69,6 +80,7 @@ struct SpectrumView{sT<:AbstractSpectrum}
         return new{typeof(parent)}(parent, viewrange)
     end
 end
+const SingleDim = Union{SpectrumView,AbstractSpectrum{1}}
 
 vrange(esv) = esv.viewrange[1]:esv.viewrange[2]
 Base.range(esv::SpectrumView) = @inbounds range(esv.parent)[vrange(esv)]
@@ -78,6 +90,7 @@ Base.length(esv::SpectrumView) = esv.viewrange[2] - esv.viewrange[1] + 1
 intensities(esv::SpectrumView) = view(intensities(esv.parent), vrange(esv))
 
 isevenspaced(::Type{<:EvenSpacedSpectrum}) = true
+isevenspaced(::Type{<:GridSpectrum}) = true
 isevenspaced(::Type{<:AbstractSpectrum}) = false
 isevenspaced(::Type{SpectrumView{sT}}) where sT = isevenspaced(sT)
 isevenspaced(spec) = isevenspaced(typeof(spec))
@@ -89,7 +102,12 @@ isevenspaced(spec) = isevenspaced(typeof(spec))
 ###############
 import MakieCore
 
-function MakieCore.convert_arguments(P::MakieCore.PointBased, spec)
+function MakieCore.convert_arguments(P::MakieCore.PointBased, spec::AbstractSpectrum{1})
     MakieCore.convert_arguments(P, range(spec), intensities(spec))
+end
+
+function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::GridSpectrum)
+    rA, rB = range(spec)
+    MakieCore.convert_arguments(P, rA, rB, intensities(spec))
 end
 

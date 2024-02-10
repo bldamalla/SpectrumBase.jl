@@ -70,7 +70,7 @@ end
 
 Return the nominal (global) maximum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmax(spectrum)
+function nominalmax(spectrum::AbstractSpectrum{1})
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
@@ -84,7 +84,7 @@ end
 
 Return the nominal (global) minimum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmin(spectrum)
+function nominalmin(spectrum::AbstractSpectrum{1})
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
