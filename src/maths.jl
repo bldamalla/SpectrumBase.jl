@@ -5,6 +5,8 @@ export nominalmin, nominalmax
 export integrate, moment
 export firstderivative
 
+import Base: @nexprs, @nref
+
 ################
 #
 #   INTEGRATION
@@ -17,46 +19,35 @@ struct RightRiemann <: IntegrationScheme end
 struct Midpoint <: IntegrationScheme end
 
 _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only even spaced spectra are supported for integration."))
-# util function for determining sum expression of intensities inside integrals
-function _sumexpression(scheme)
-    if scheme === LeftRiemann
-        return :(sum(yvals) - last(yvals))
+
+@generated function integrate(scheme, spec::AbstractSpecOrView)
+    idcs = if scheme === LeftRiemann
+        :(firstindex(yvals, m):lastindex(yvals, m)-1)
     elseif scheme === RightRiemann
-        return :(sum(yvals) - first(yvals))
-    elseif scheme === Midpoint
-        return :(sum(yvals) - (first(yvals) + last(yvals)) / 2)
-    else
-        throw(ArgumentError("Integration scheme not internally supported."))
+        :(firstindex(yvals, m)+1:lastindex(yvals, m))
     end
-end
-
-"""
-    integrate(R::IntegrationScheme, spectrum)
-
-Numerically integrate `spectrum` using the integration scheme `R`.
-
-# Examples
-
-    # integration using LeftRiemann scheme
-    integrate(LeftRiemann(), spectrum)
-
-    # integration using RightRiemann scheme
-    integrate(RightRiemann(), spectrum)
-
-    # integration using Midpoint scheme (midpoint rule)
-    integrate(Midpoint(), spectrum)
-"""
-@generated function integrate(scheme, spectrum)
-    sm_ex = _sumexpression(scheme)      # calculate sum expression according to scheme
+    N = ndims(spec)
 
     return quote
-        _integspeccheck(spectrum)
-        yvals = intensities(spectrum)
-        Δ = step(spectrum)
-        # len = length(spectrum) - 1  # one point is lost in all above schemes
-
-        sm = $(sm_ex)
-        return sm * Δ
+        _integspeccheck(spec)
+        yvals = intensities(spec)
+        @views begin
+            @nexprs $N m->(rg_m = axes(yvals, m)[$idcs])
+            target = @nref $N rg yvals
+        end
+        return sum(target) * prod(step(spec))
+    end
+end
+function integrate(::Midpoint, spec::AbstractSpecOrView)
+    _integspeccheck(spec)
+    yvals = intensities(spec)
+    sz = size(spec); N = ndims(spec)
+    return prod(step(spec)) * sum(CartesianIndices(spec)) do ix
+        nflags = count(zip(sz, Tuple(ix))) do (mx, i)
+            1 < i < mx
+        end
+        scalefactor = 2^(N-nflags)
+        @inbounds yvals[ix] / scalefactor
     end
 end
 
