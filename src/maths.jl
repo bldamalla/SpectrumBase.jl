@@ -119,6 +119,7 @@ Calculate the first derivative of the `spectrum` using the central difference me
 """
 function firstderivative(spectrum)
     _integspeccheck(spectrum)   # check if the spectrum is even spaced
+    ndims(spectrum) == 1 || throw(ArgumentError("only one-dimensional spectra are supported"))
     yvals = intensities(spectrum)
     Δ = step(spectrum)
     len = length(spectrum) - 2  # length of vector containing actual derivatives
@@ -128,7 +129,7 @@ function firstderivative(spectrum)
     ysimilar[begin] = ysimilar[end] = zero(eltype(ysimilar))
 
     # get the derivatives y'[j] = (y[j+1] - y[j-1])/2Δ
-    for j in Iterators.take(Iterators.drop(eachindex(ysimilar), 1), len)
+    for j in eachindex(ysimilar)[begin+1:end-1]
         @inbounds ysimilar[j] = (yvals[j+1] - yvals[j-1]) / (2*Δ)
     end
 
