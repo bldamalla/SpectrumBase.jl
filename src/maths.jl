@@ -5,8 +5,6 @@ export nominalmin, nominalmax
 export integrate, moment
 export firstderivative
 
-import Base: @nexprs, @nref
-
 ################
 #
 #   INTEGRATION
@@ -22,27 +20,23 @@ _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only ev
 
 @generated function integrate(scheme, spec::AbstractSpecOrView)
     idcs = if scheme === LeftRiemann
-        :(firstindex(yvals, m):lastindex(yvals, m)-1)
+        :(CartesianIndices(sz_targ))
     elseif scheme === RightRiemann
-        :(firstindex(yvals, m)+1:lastindex(yvals, m))
+        :(CartesianIndices(sz_targ) .+ CartesianIndex(1,1))
     end
-    N = ndims(spec)
 
     return quote
         _integspeccheck(spec)
         yvals = intensities(spec)
-        @views begin
-            @nexprs $N m->(rg_m = axes(yvals, m)[$idcs])
-            target = @nref $N rg yvals
-        end
-        return sum(target) * prod(step(spec))
+        sz_targ = size(yvals) .- 1
+        return @views sum(yvals[$idcs]) * prod(step(spec))
     end
 end
 function integrate(::Midpoint, spec::AbstractSpecOrView)
     _integspeccheck(spec)
     yvals = intensities(spec)
     sz = size(spec); N = ndims(spec)
-    return prod(step(spec)) * sum(CartesianIndices(spec)) do ix
+    return prod(step(spec)) * sum(CartesianIndices(yvals)) do ix
         nflags = count(zip(sz, Tuple(ix))) do (mx, i)
             1 < i < mx
         end
