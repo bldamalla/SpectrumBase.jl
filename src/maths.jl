@@ -55,13 +55,15 @@ end
 
 Return the nominal (global) maximum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmax(spectrum::AbstractSpectrum{1})
+function nominalmax(spectrum::AbstractSpecOrView)
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
-    maxint, idx = findmax(yvals)
-    zippedidx = idx - firstindex(yvals) + firstindex(xvals)
-    return xvals[zippedidx], maxint
+    maxint, idx = findmax(yvals); tidx = Tuple(idx)
+    rvalues = ntuple(length(tidx)) do i
+        @inbounds xvals[i][tidx[i]]
+    end
+    return rvalues, maxint
 end
 
 """
@@ -69,13 +71,15 @@ end
 
 Return the nominal (global) minimum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmin(spectrum::AbstractSpectrum{1})
+function nominalmin(spectrum::AbstractSpecOrView)
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
-    minint, idx = findmin(yvals)
-    zippedidx = idx - firstindex(yvals) + firstindex(xvals)
-    return xvals[zippedidx], minint
+    minint, idx = findmin(yvals); tidx = Tuple(idx)
+    rvalues = ntuple(length(tidx)) do i
+        @inbounds xvals[i][tidx[i]]
+    end
+    return rvalues, minint
 end
 
 """
