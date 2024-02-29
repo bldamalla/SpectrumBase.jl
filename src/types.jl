@@ -123,6 +123,8 @@ struct SpectrumView{sT<:AbstractSpectrum,iT}
     end
 end
 Base.ndims(::SpectrumView{T}) where T = ndims(T)
+Base.parent(vw::SpectrumView) = vw.parent
+Base.parent(spec::AbstractSpectrum) = spec
 
 function Base.range(esv::SpectrumView)
     return ntuple(ndims(esv)) do i
@@ -143,6 +145,8 @@ isevenspaced(::Type{<:GridSpectrum}) = true
 isevenspaced(::Type{<:AbstractSpectrum}) = false
 isevenspaced(::Type{SpectrumView{sT}}) where sT = isevenspaced(sT)
 isevenspaced(spec) = isevenspaced(typeof(spec))
+
+const AbstractSpecOrView = Union{AbstractSpectrum,SpectrumView}
 
 ################
 #
