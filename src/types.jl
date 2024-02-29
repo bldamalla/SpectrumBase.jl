@@ -122,7 +122,8 @@ struct SpectrumView{sT<:AbstractSpectrum,iT}
         return new{st,iT}(p, vrange)
     end
 end
-Base.ndims(::SpectrumView{T}) where T = ndims(T)
+Base.ndims(::Type{SpectrumView{T}}) where T = ndims(T)
+Base.ndims(obj::SpectrumView) = ndims(typeof(obj))
 Base.parent(vw::SpectrumView) = vw.parent
 Base.parent(spec::AbstractSpectrum) = spec
 
