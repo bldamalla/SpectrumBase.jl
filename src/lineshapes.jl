@@ -25,7 +25,7 @@ struct Gaussian{xT,yT} <: LineShape{xT,yT}
     σ::xT
     h::yT
     function Gaussian(μ::xT, σ::xT, h::yT) where {xT,yT}
-        σ < 0 && throw(ArgumentError("scale ``σ`` should be positive"))
+        σ > 0 || throw(ArgumentError("scale ``σ`` should be positive"))
         return new{xT,yT}(μ,σ,h)
     end
 end
@@ -42,7 +42,7 @@ struct Cauchy{xT,yT} <: LineShape{xT,yT}
     γ::xT
     h::yT
     function Cauchy(x₀::xT, γ::xT, h::yT) where {xT,yT}
-        γ < 0 && throw(ArgumentError("scale ``γ`` should be positive"))
+        γ > 0 || throw(ArgumentError("scale ``γ`` should be positive"))
         return new{xT,yT}(x₀,γ,h)
     end
 end
@@ -50,7 +50,7 @@ lscenter(lt::Cauchy) = lt.x₀
 scale(lt::Cauchy) = lt.γ
 function evaluate(lt::Cauchy, x)
     scaled = (x - lt.x₀) / lt.γ
-    dnm = γ * (1 + scaled^2)
+    dnm = lt.γ * (1 + scaled^2)
     return inv(dnm) * lt.h
 end
 
@@ -58,8 +58,8 @@ struct RaisedCosine{xT,yT} <: LineShape{xT,yT}
     μ::xT
     s::xT
     h::yT
-    function RaisedCosine(μ::xT,s::sT,h::yT) where {xT,yT}
-        s < 0 && throw(ArgumentError("scale ``s`` should be positive"))
+    function RaisedCosine(μ::xT, s::xT, h::yT) where {xT,yT}
+        s > 0 || throw(ArgumentError("scale ``s`` should be positive"))
         return new{xT,yT}(μ,s,h)
     end
 end
