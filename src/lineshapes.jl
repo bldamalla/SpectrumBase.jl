@@ -20,6 +20,8 @@ function evaluate end
 function lscenter end
 function scale end
 
+_nparams(::T) where T<:LineShape = _nparams(T)
+
 struct Gaussian{xT,yT} <: LineShape{xT,yT}
     μ::xT
     σ::xT
@@ -31,6 +33,7 @@ struct Gaussian{xT,yT} <: LineShape{xT,yT}
 end
 lscenter(gs::Gaussian) = gs.μ
 scale(gs::Gaussian) = gs.σ
+_nparams(::Type{<:Gaussian}) = 3
 function evaluate(gs::Gaussian, x)
     scaled = (x - gs.μ) / gs.σ
     expd = exp(scaled^2 * -1//2)
@@ -48,6 +51,7 @@ struct Cauchy{xT,yT} <: LineShape{xT,yT}
 end
 lscenter(lt::Cauchy) = lt.x₀
 scale(lt::Cauchy) = lt.γ
+_nparams(::Type{<:Cauchy}) = 3
 function evaluate(lt::Cauchy, x)
     scaled = (x - lt.x₀) / lt.γ
     dnm = lt.γ * (1 + scaled^2)
@@ -65,6 +69,7 @@ struct RaisedCosine{xT,yT} <: LineShape{xT,yT}
 end
 lscenter(rc::RaisedCosine) = rc.μ
 scale(rc::RaisedCosine) = rc.s
+_nparams(::Type{<:RaisedCosine}) = 3
 function evaluate(rc::RaisedCosine, x)
     scaled = (x - rc.μ) / rc.s
     hvc = 1 + cospi(scaled)
