@@ -137,8 +137,8 @@ function _evaluator(LS, params)
     # throw an error if the length of params in the compound is not divisible by the
     # number of params in a single lineshape
     M = _nparams(LS); LS_ = _lsparenttype(LS)
+    partitioned = Iterators.partition(params, M)
     return function _tp(x)
-        partitioned = Iterators.partition(params, M)
         return sum(partitioned) do part
             evaluate(LS_(part...), x)
         end
