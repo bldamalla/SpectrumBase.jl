@@ -10,13 +10,13 @@ using SpectrumBase, Optim
 
 Solve a `FittingProblem` prob and return its optimized solution.
 """
-function SpectrumBase.solve(prob::FittingProblem)
+function SpectrumBase.solve(prob::FittingProblem; autodiff=:forward)
     initparams = prob.init_params
     objfunc = build_objective(prob)
-    soln = optimize(objfunc, initparams, LBFGS(), autodiff=:forward)
+    soln = optimize(objfunc, initparams, LBFGS(), autodiff=autodiff)
     return FittingSolution(prob, soln)
 end
-Optim.optimize(prob::FittingProblem) = solve(prob)
+Optim.optimize(prob::FittingProblem) = SpectrumBase.solve(prob)
 
 # TODO: extend optim functions to work on types defined here
 # especially fitting solution

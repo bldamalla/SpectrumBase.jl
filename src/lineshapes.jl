@@ -87,7 +87,7 @@ _lsparenttype(::Type{<:RaisedCosine}) = RaisedCosine
 ############
 
 export FittingProblem, FittingSolution
-export build_objective, solve
+export build_objective
 
 # define the fitting problem
 # make a solution struct for keeping the solution and
