@@ -28,7 +28,7 @@ struct Gaussian{xT,yT} <: LineShape{xT,yT}
     σ::xT
     h::yT
     function Gaussian(μ::xT, σ::xT, h::yT) where {xT,yT}
-        #σ > 0 || throw(ArgumentError("scale ``σ`` should be positive"))
+        σ > 0 || throw(ArgumentError("scale ``σ`` should be positive"))
         return new{xT,yT}(μ,σ,h)
     end
 end
@@ -47,7 +47,7 @@ struct Cauchy{xT,yT} <: LineShape{xT,yT}
     γ::xT
     h::yT
     function Cauchy(x₀::xT, γ::xT, h::yT) where {xT,yT}
-        #γ > 0 || throw(ArgumentError("scale ``γ`` should be positive"))
+        γ > 0 || throw(ArgumentError("scale ``γ`` should be positive"))
         return new{xT,yT}(x₀,γ,h)
     end
 end
@@ -66,7 +66,7 @@ struct RaisedCosine{xT,yT} <: LineShape{xT,yT}
     s::xT
     h::yT
     function RaisedCosine(μ::xT, s::xT, h::yT) where {xT,yT}
-        #s > 0 || throw(ArgumentError("scale ``s`` should be positive"))
+        s > 0 || throw(ArgumentError("scale ``s`` should be positive"))
         return new{xT,yT}(μ,s,h)
     end
 end
