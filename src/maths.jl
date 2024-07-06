@@ -20,11 +20,11 @@ _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only ev
 # util function for determining sum expression of intensities inside integrals
 function _sumexpression(scheme)
     if scheme === LeftRiemann
-        return :(sum(yvals) - last(yvals))
+        return :(ThreadsX.sum(yvals) - last(yvals))
     elseif scheme === RightRiemann
-        return :(sum(yvals) - first(yvals))
+        return :(ThreadsX.sum(yvals) - first(yvals))
     elseif scheme === Midpoint
-        return :(sum(yvals) - (first(yvals) + last(yvals)) / 2)
+        return :(ThreadsX.sum(yvals) - (first(yvals) + last(yvals)) / 2)
     else
         throw(ArgumentError("Integration scheme not internally supported."))
     end
