@@ -116,33 +116,3 @@ moment(scheme, spectrum, degree=1, center=zero(eltype(range(spectrum)))) = _unsc
         return sm * Δ
     end
 end
-
-################
-#
-#   DERIVATIVES
-#
-################
-
-"""
-    firstderivative(spectrum)
-
-Calculate the first derivative of the `spectrum` using the central difference method.
-"""
-function firstderivative(spectrum)
-    _integspeccheck(spectrum)   # check if the spectrum is even spaced
-    yvals = intensities(spectrum)
-    Δ = step(spectrum)
-    len = length(spectrum) - 2  # length of vector containing actual derivatives
-
-    # initialize the output vector; first, last elements =0 to indicate loss of info
-    ysimilar = similar(yvals)
-    ysimilar[begin] = ysimilar[end] = zero(eltype(ysimilar))
-
-    # get the derivatives y'[j] = (y[j+1] - y[j-1])/2Δ
-    for j in Iterators.take(Iterators.drop(eachindex(ysimilar), 1), len)
-        @inbounds ysimilar[j] = (yvals[j+1] - yvals[j-1]) / (2*Δ)
-    end
-
-    return ysimilar
-end
-
