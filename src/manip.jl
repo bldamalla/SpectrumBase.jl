@@ -44,6 +44,8 @@ function hshift(spec::AbstractSpectrum, x)
     return rng .+ x_
 end
 
+using Memoization
+
 """
     SGFilter(windowsize, fitdegree, derivativedegree)
     (ft::SGFilter)(::AbstractVector)
@@ -76,13 +78,25 @@ end
 SGFilter(w, d) = SGFilter(w, d, 0)
 
 function (ft::SGFilter)(ydata::AbstractVector)
-    wts = ft.coeffs; w = ft.windowsize
+    wts = ft.coeffs; w = ft.windowsize; hw = _halfwindow(w)
     ylen = length(ydata); rT = promote_type(eltype(ydata), eltype(wts))
-    rvec = zeros(rT, w+ylen-1)
-    @inbounds for j in 1:w, k in 1:ylen
-        rvec[j+k-1] += wts[j] * ydata[k]
+    rvec = zeros(rT, ylen)
+    @inbounds for i in 1+hw:ylen-hw, j in -hw:hw
+        rvec[i] += wts[j+hw+1]*ydata[i+j]
     end
-    return rvec[w:end-w+1]
+    return rvec
+end
+
+function _fixendpoints!(rvec, ft::SGFilter, ydata::AbstractVector)
+    w = ft.windowsize; hw = _halfwindow(w)
+    deriv = ft.derv; order = ft.fitdegree
+    @views @inbounds for i in 1:hw, j in -hw:hw
+        coeff  = _precoeff( j,  i, order, hw, deriv)
+        coeff2 = _precoeff(-j, -i, order, hw, deriv)
+        rvec[i] += coeff*ydata[i]
+        rvec[end-i+1] += coeff2*ydata[end-i+1]
+    end
+    return rvec
 end
 
 _halfwindow(w::Int) = div(w-1, 2)
