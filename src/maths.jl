@@ -17,46 +17,31 @@ struct RightRiemann <: IntegrationScheme end
 struct Midpoint <: IntegrationScheme end
 
 _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only even spaced spectra are supported for integration."))
-# util function for determining sum expression of intensities inside integrals
-function _sumexpression(scheme)
-    if scheme === LeftRiemann
-        return :(ThreadsX.sum(yvals) - last(yvals))
+
+@generated function integrate(scheme, spec::AbstractSpecOrView)
+    idcs = if scheme === LeftRiemann
+        :(CartesianIndices(sz_targ))
     elseif scheme === RightRiemann
-        return :(ThreadsX.sum(yvals) - first(yvals))
-    elseif scheme === Midpoint
-        return :(ThreadsX.sum(yvals) - (first(yvals) + last(yvals)) / 2)
-    else
-        throw(ArgumentError("Integration scheme not internally supported."))
+        :(CartesianIndices(sz_targ) .+ CartesianIndex(1,1))
     end
-end
-
-"""
-    integrate(R::IntegrationScheme, spectrum)
-
-Numerically integrate `spectrum` using the integration scheme `R`.
-
-# Examples
-
-    # integration using LeftRiemann scheme
-    integrate(LeftRiemann(), spectrum)
-
-    # integration using RightRiemann scheme
-    integrate(RightRiemann(), spectrum)
-
-    # integration using Midpoint scheme (midpoint rule)
-    integrate(Midpoint(), spectrum)
-"""
-@generated function integrate(scheme, spectrum)
-    sm_ex = _sumexpression(scheme)      # calculate sum expression according to scheme
 
     return quote
-        _integspeccheck(spectrum)
-        yvals = intensities(spectrum)
-        Δ = step(spectrum)
-        # len = length(spectrum) - 1  # one point is lost in all above schemes
-
-        sm = $(sm_ex)
-        return sm * Δ
+        _integspeccheck(spec)
+        yvals = intensities(spec)
+        sz_targ = size(yvals) .- 1
+        return @views sum(yvals[$idcs]) * prod(step(spec))
+    end
+end
+function integrate(::Midpoint, spec::AbstractSpecOrView)
+    _integspeccheck(spec)
+    yvals = intensities(spec)
+    sz = size(spec); N = ndims(spec)
+    return prod(step(spec)) * sum(CartesianIndices(yvals)) do ix
+        nflags = count(zip(sz, Tuple(ix))) do (mx, i)
+            1 < i < mx
+        end
+        scalefactor = 2^(N-nflags)
+        @inbounds yvals[ix] / scalefactor
     end
 end
 
@@ -70,13 +55,15 @@ end
 
 Return the nominal (global) maximum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmax(spectrum)
+function nominalmax(spectrum::AbstractSpecOrView)
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
-    maxint, idx = findmax(yvals)
-    zippedidx = idx - firstindex(yvals) + firstindex(xvals)
-    return xvals[zippedidx], maxint
+    maxint, idx = findmax(yvals); tidx = Tuple(idx)
+    rvalues = ntuple(length(tidx)) do i
+        @inbounds xvals[i][tidx[i]]
+    end
+    return rvalues, maxint
 end
 
 """
@@ -84,13 +71,15 @@ end
 
 Return the nominal (global) minimum intensity of the spectrum and its corresponding coordinate.
 """
-function nominalmin(spectrum)
+function nominalmin(spectrum::AbstractSpecOrView)
     xvals = range(spectrum)
     yvals = intensities(spectrum)
 
-    minint, idx = findmin(yvals)
-    zippedidx = idx - firstindex(yvals) + firstindex(xvals)
-    return xvals[zippedidx], minint
+    minint, idx = findmin(yvals); tidx = Tuple(idx)
+    rvalues = ntuple(length(tidx)) do i
+        @inbounds xvals[i][tidx[i]]
+    end
+    return rvalues, minint
 end
 
 """
@@ -116,3 +105,4 @@ moment(scheme, spectrum, degree=1, center=zero(eltype(range(spectrum)))) = _unsc
         return sm * Δ
     end
 end
+

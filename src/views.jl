@@ -13,20 +13,15 @@ Implemented methods for searching smallest intervals are:
 + `:binsearch` (default) - naive binary search
 + `:linear` - naive linear search
 """
-function getview(spec::AbstractSpectrum{xT}, inner, method=:binsearch) where xT
-    rng = range(spec)
-    la, ra = first(rng), last(rng)
-    lb, rb = convert.(xT, inner)
-
-    @assert all(inner) do ix
-        (la <= ix <= ra) | (la >= ix >= ra)
-    end "Endpoints in second argument should be within the `range` of the first argument."
-
-    @assert (la - ra) * (lb - rb) > zero(xT) "Ordering of the endpoints should be maintained."
-
-    # get the sections
-    targrange = envelope(rng, inner, method)
-    return SpectrumView(spec, targrange)
+function getview(spec::AbstractSpectrum, inner::Vararg{NTuple{2}}; method=:binsearch)
+    rngs = range(spec)
+    xType = eltype(rngs[begin])
+    vframes = @inbounds ntuple(ndims(spec)) do dim
+        ia, ib = convert.(xType, inner[dim])
+        start, stop = envelope(rngs[dim], (ia, ib), method)
+        return ViewFrame(start, stop)
+    end
+    return SpectrumView(spec, vframes)
 end
 
 """
@@ -42,6 +37,9 @@ function section(specview::SpectrumView)
 end
 
 function envelope(parent, inner, method)
+    isrev = first(parent) > last(parent) ? 1 : -1
+    input_orientation = first(inner) > last(inner) ? 1 : -1
+    @assert isrev * input_orientation > 0 "ordering of envelope arguments should match that of parent"
     if method === :linear
         _envelope_linear(parent, inner)
     elseif method === :binsearch
