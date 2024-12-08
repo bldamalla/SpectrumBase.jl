@@ -8,7 +8,6 @@ FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 MakieCore = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
 Memoization = "6fafb56a-5788-4b4e-91ca-c0cea6611c73"
 StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-ThreadsX = "ac1d9e8a-700a-412c-b207-f0111f4b6c0d"
 
 [weakdeps]
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
