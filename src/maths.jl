@@ -35,7 +35,7 @@ end
 function integrate(::Midpoint, spec::AbstractSpecOrView)
     _integspeccheck(spec)
     yvals = intensities(spec)
-    sz = size(spec); N = ndims(spec)
+    sz = size(yvals); N = ndims(spec)
     return prod(step(spec)) * sum(CartesianIndices(yvals)) do ix
         nflags = count(zip(sz, Tuple(ix))) do (mx, i)
             1 < i < mx

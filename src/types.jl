@@ -1,6 +1,6 @@
 # types.jl --- types for spectra keeping and manip
 
-export AbstractSpectrum, EvenSpacedSpectrum, SpectrumView
+export AbstractSpectrum, EvenSpacedSpectrum, GridSpectrum, SpectrumView
 export endpoints, intensities
 
 """
@@ -51,6 +51,7 @@ Return the range for which the spectrum is obtained.
 """
 Base.range(ev::ESS) = (range(endpoints(ev)...; length=length(ev)),)
 Base.size(ev::AbstractSpectrum) = size(intensities(ev))
+Base.length(ev::AbstractSpectrum{1}) = size(ev)[1]
 
 function Base.range(gr::GS)
     eA, eB = endpoints(gr)
@@ -113,13 +114,13 @@ end
 A lazy view of an `AbstractSpectrum`. Stores the `parent` integer values indicating
 indices where the slices will be obtained.
 """
-struct SpectrumView{sT<:AbstractSpectrum,iT}
+struct SpectrumView{sT<:AbstractSpectrum}
     parent::sT
-    viewframe::NTuple{N,ViewFrame{iT}} where N
+    viewframe   # the types accepted by the constructor are limited so this is probably fine?
     function SpectrumView(p::AbstractSpectrum{N}, vrange::NTuple{N}) where N
         st = typeof(p)
         iT = eltype(vrange[begin])
-        return new{st,iT}(p, vrange)
+        return new{st}(p, vrange)
     end
 end
 Base.ndims(::Type{SpectrumView{T}}) where T = ndims(T)
@@ -128,6 +129,7 @@ Base.parent(vw::SpectrumView) = vw.parent
 Base.parent(spec::AbstractSpectrum) = spec
 
 function Base.range(esv::SpectrumView)
+    rgs = range(esv.parent)
     return ntuple(ndims(esv)) do i
         vrange = @inbounds esv.viewframe[i] |> asrange
         return @inbounds rgs[i][vrange]
@@ -139,7 +141,7 @@ function Base.step(esv::SpectrumView)
     return step.(range(esv))
 end
 # intensities(esv::SpectrumView) = intensities(esv.parent)[vrange(esv)]
-intensities(esv::SpectrumView) = view(intensities(esv.parent), range(esv)...)
+intensities(esv::SpectrumView) = view(intensities(esv.parent), map(asrange, esv.viewframe)...)
 
 isevenspaced(::Type{<:EvenSpacedSpectrum}) = true
 isevenspaced(::Type{<:GridSpectrum}) = true
@@ -157,11 +159,20 @@ const AbstractSpecOrView = Union{AbstractSpectrum,SpectrumView}
 import MakieCore
 
 function MakieCore.convert_arguments(P::MakieCore.PointBased, spec::AbstractSpectrum{1})
-    MakieCore.convert_arguments(P, range(spec), intensities(spec))
+    MakieCore.convert_arguments(P, range(spec)[1], intensities(spec))
 end
 
-function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::GridSpectrum)
+function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::AbstractSpectrum{2})
     rA, rB = range(spec)
     MakieCore.convert_arguments(P, rA, rB, intensities(spec))
 end
 
+# also allow for the respective views to be plotted
+function MakieCore.convert_arguments(P::MakieCore.PointBased, spec::SpectrumView{<:AbstractSpectrum{1}})
+    MakieCore.convert_arguments(P, range(spec)[1], intensities(spec))
+end
+
+function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::SpectrumView{<:AbstractSpectrum{2}})
+    rA, rB = range(spec)
+    MakieCore.convert_arguments(P, rA, rB, intensities(spec))
+end
