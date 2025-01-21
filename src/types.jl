@@ -119,7 +119,6 @@ struct SpectrumView{sT<:AbstractSpectrum}
     viewframe   # the types accepted by the constructor are limited so this is probably fine?
     function SpectrumView(p::AbstractSpectrum{N}, vrange::NTuple{N}) where N
         st = typeof(p)
-        iT = eltype(vrange[begin])
         return new{st}(p, vrange)
     end
 end
