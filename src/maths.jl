@@ -14,7 +14,7 @@ abstract type IntegrationScheme end
 
 struct LeftRiemann <: IntegrationScheme end
 struct RightRiemann <: IntegrationScheme end
-struct Midpoint <: IntegrationScheme end
+struct Trapezoid <: IntegrationScheme end
 
 _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only even spaced spectra are supported for integration."))
 
@@ -32,7 +32,7 @@ _integspeccheck(spec) = isevenspaced(spec) ? true : throw(ArgumentError("only ev
         return @views sum(yvals[$idcs]) * prod(step(spec))
     end
 end
-function integrate(::Midpoint, spec::AbstractSpecOrView)
+function integrate(::Trapezoid, spec::AbstractSpecOrView)
     _integspeccheck(spec)
     yvals = intensities(spec)
     sz = size(yvals); N = ndims(spec)
