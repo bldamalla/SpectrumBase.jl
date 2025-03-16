@@ -84,6 +84,7 @@ function (ft::SGFilter)(ydata::AbstractVector)
     @inbounds for i in 1+hw:ylen-hw, j in -hw:hw
         rvec[i] += wts[j+hw+1]*ydata[i+j]
     end
+    _fixendpoints!(rvec, ft, ydata)
     return rvec
 end
 
