@@ -1,7 +1,7 @@
 name = "SpectrumBase"
 uuid = "b02fe80f-c43c-4f43-a417-a67622f503c9"
 authors = ["Bon Leif Amalla <bonleifamalla@gmail.com> and contributors"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
