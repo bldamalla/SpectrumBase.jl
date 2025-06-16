@@ -1,6 +1,6 @@
 # lineshapes.jl --- basic lineshapes for testing functionality and fitting
 
-export LineShape, Gaussian, Cauchy, RaisedCosine
+export LineShape, Gaussian, Cauchy, RaisedCosine, QuarticScattering
 export CompositeShape
 export evaluate, lscenter, scale
 
@@ -89,6 +89,23 @@ function evaluate(rc::RaisedCosine, x)
     return hvc * rc.h
 end
 _outtype(::Type{RaisedCosine{xT,yT}}) where {xT,yT} = yT
+
+struct QuarticScattering{xT,yT} <: LineShape{xT,yT}
+    λ::xT
+    h::yT
+    function QuarticScattering{xT,yT}(λ::xT, h::yT) where {xT,yT}
+        h > 0 || throw(ArgumentError("height ``h`` should be positive"))
+        return new{xT,yT}(λ,h)
+    end
+end
+function QuarticScattering(λ::cT, h::hT) where {cT<:Number, hT<:Number}
+    return QuarticScattering{cT,hT}(λ, h)    # the center is always zero
+end
+scale(qs::QuarticScattering) = qs.h                 # the 'height' is the scale
+function evaluate(qs::QuarticScattering, x)
+    return qs.h * (qs.λ / x)^4                           # rayleigh scattering
+end
+_outtype(::Type{QuarticScattering{xT,yT}}) where {xT,yT} = yT
 
 using StructArrays
 """
