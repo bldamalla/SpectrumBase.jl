@@ -150,28 +150,3 @@ isevenspaced(spec) = isevenspaced(typeof(spec))
 
 const AbstractSpecOrView = Union{AbstractSpectrum,SpectrumView}
 
-################
-#
-#   Plotting recipe
-#
-###############
-import MakieCore
-
-function MakieCore.convert_arguments(P::MakieCore.PointBased, spec::AbstractSpectrum{1})
-    MakieCore.convert_arguments(P, range(spec)[1], intensities(spec))
-end
-
-function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::AbstractSpectrum{2})
-    rA, rB = range(spec)
-    MakieCore.convert_arguments(P, rA, rB, intensities(spec))
-end
-
-# also allow for the respective views to be plotted
-function MakieCore.convert_arguments(P::MakieCore.PointBased, spec::SpectrumView{<:AbstractSpectrum{1}})
-    MakieCore.convert_arguments(P, range(spec)[1], intensities(spec))
-end
-
-function MakieCore.convert_arguments(P::MakieCore.GridBased, spec::SpectrumView{<:AbstractSpectrum{2}})
-    rA, rB = range(spec)
-    MakieCore.convert_arguments(P, rA, rB, intensities(spec))
-end
