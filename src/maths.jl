@@ -1,9 +1,8 @@
 # maths.jl --- mathematical operations on spectra
 
-export LeftRiemann, RightRiemann, Midpoint
+export LeftRiemann, RightRiemann, Trapezoid
 export nominalmin, nominalmax
 export integrate, moment
-export firstderivative
 
 ################
 #
@@ -36,7 +35,7 @@ function integrate(::Trapezoid, spec::AbstractSpecOrView)
     _integspeccheck(spec)
     yvals = intensities(spec)
     sz = size(yvals); N = ndims(spec)
-    return prod(step(spec)) * sum(CartesianIndices(yvals)) do ix
+    return abs(prod(step(spec))) * sum(CartesianIndices(yvals)) do ix
         nflags = count(zip(sz, Tuple(ix))) do (mx, i)
             1 < i < mx
         end
