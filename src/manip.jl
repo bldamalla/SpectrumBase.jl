@@ -2,7 +2,7 @@
 
 abstract type AbstractFilter end
 
-export SGFilter
+export SGFilter, WhittakerFilter
 export vshift, vscale, hshift
 
 """
@@ -132,4 +132,61 @@ function _precoeff(i, t, o, m, s)
 end
 
 _genfac(a, b) = ifelse(b>0, prod(a-b+1:a),  1)
+
+## whittaker filter (should work for unevenly spaced spectra) -- we define two methods:
+# one for ESS and one for a generic AbstractSpectrum{1,xT,yT}
+
+using SparseArrays, LinearAlgebra
+
+struct WhittakerFilter{lT} <: AbstractFilter
+    λ::lT
+    difforder::Int
+end
+function (wf::WhittakerFilter)(spec::AbstractSpectrum{1})
+    if isevenspaced(spec)
+        return _whittakereven(wf, spec)
+    else
+        return _whittakernoneven(wf, spec)
+    end
+end
+
+function _whittakereven(wf, spec)
+    (; λ, difforder) = wf
+    ints = intensities(spec)        # since the data is evenly spaced, you don't need the x values
+    E = _diffmatrix(ints, 0)
+    dE = _diffmatrix(ints, difforder)
+    pmatrix = Symmetric(E + λ*dE'*dE, :U)
+    smooth_ints = pmatrix \ ints
+    rg = range(spec) |> only        # only for returning the entire spectrum
+    return rg, smooth_ints
+end
+
+function _whittakernoneven(wf, spec)
+    (; λ, difforder) = wf
+    ints = intensities(spec); rg = range(spec) |> only
+    E = _divdiffmatrix(rg, 0)
+    dE = _divdiffmatrix(rg, difforder)
+    pmatrix = Symmetric(E + λ*dE'*dE, :U)
+    smooth_ints = pmatrix \ ints
+    return rg, smooth_ints
+end
+
+function _diffmatrix(vlen, order)
+    if order == 0
+        return spdiagm(vlen, vlen, 0=>ones(Int,vlen))
+    else
+        return diff(_diffmatrix(vlen, order-1), dims=1)
+    end
+end
+
+function _divdiffmatrix(xvec, order)
+    xlen = length(xvec)
+    if order == 0
+        return spdiagm(xlen, xlen, 0=>ones(Int,xlen))
+    else
+        dx = @views xvec[begin+order:end] .- xvec[begin:end-order]
+        V = spdiagm(xlen-order, xlen-order, 0=>inv.(dx))
+        return V * diff(_divdiffmatrix(xvec, order-1), dims=1)
+    end
+end
 
