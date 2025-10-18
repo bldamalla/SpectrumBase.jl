@@ -4,6 +4,7 @@ abstract type AbstractFilter end
 
 export SGFilter, WhittakerFilter
 export vshift, vscale, hshift
+export spectrumsum, spectrumdifference
 
 """
     vshift(spectrum, y)
@@ -188,5 +189,25 @@ function _divdiffmatrix(xvec, order)
         V = spdiagm(xlen-order, xlen-order, 0=>inv.(dx))
         return V * diff(_divdiffmatrix(xvec, order-1), dims=1)
     end
+end
+
+## SPECTRAL ADDITION AND SUBTRACTION
+
+function _checkrange(s1::AbstractSpecOrView, s2::AbstractSpecOrView)
+    return range(s1) == range(s2)
+end
+
+# for these methods, we depend on the multiple dispatch of methods and promotion of the element types
+# of the intensity values of the added/subtracted spectra
+function spectrumsum(s1, s2)
+    _checkrange(s1, s2) || throw(ArgumentError("spectrum x-values differ in both spectra"))
+    ints = intensities(s1) .+ intensities(s2)
+    return range(s1), ints
+end
+
+function spectrumdifference(s1, s2)
+    _checkrange(s1, s2) || throw(ArgumentError("spectrum x-values differ in both spectra"))
+    ints = intensities(s1) .- intensities(s2)
+    return range(s2), ints
 end
 
