@@ -154,8 +154,8 @@ end
 function _whittakereven(wf, spec)
     (; λ, difforder) = wf
     ints = intensities(spec)        # since the data is evenly spaced, you don't need the x values
-    E = _diffmatrix(ints, 0)
-    dE = _diffmatrix(ints, difforder)
+    E = _diffmatrix(length(ints), 0)
+    dE = _diffmatrix(length(ints), difforder)
     pmatrix = Symmetric(E + λ*dE'*dE, :U)
     smooth_ints = pmatrix \ ints
     rg = range(spec) |> only        # only for returning the entire spectrum
