@@ -9,7 +9,7 @@ using SpectrumBase
 # sampled integrals
 function Integrals.SampledIntegralProblem(spec, f=identity)
     ndims(spec) == 1 || throw(ArgumentError("currently only one-dimensional arrays are supported"))
-    xs = range(spec)
+    xs = range(spec) |> only
     ys = intensities(spec) .|> f
     return SampledIntegralProblem(ys, xs)
 end
